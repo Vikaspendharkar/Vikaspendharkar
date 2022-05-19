@@ -6,38 +6,37 @@
 trigger:
 - main
 
-pool:
-  vmImage: windows-latest
-  
+jobs:
 
-steps:
-- task: UsePythonVersion@0
-  inputs:
-    versionSpec: '3.x'
-    addToPath: true
-    architecture: 'x64'
-  displayName: 'Use Python $(python.version)'
+- job: 'Test'
+  pool:
+    vmImage: windows-latest
+  strategy:
+    matrix:
+      python310:
+        python.version: '3.10'
+    maxParallel: 1      
 
-
-- script: 
-      python -m pip install --upgrade pip
-      pip install selenium
-      pip install webdriver-manager
-      pip install webdrivermanager
-
-  displayName: 'install python pkg from requirements'
+  steps:
+  - task: UsePythonVersion@0
+    inputs:
+      versionSpec: '3.x'
+      architecture: 'x64'
+    
 
 
-- script: |    
-    python setup.py sdist 
-  displayName: 'Artifact creation'
+  - script: 
+        python -m pip install --upgrade pip
+        npm install chromedriver
+        pip install selenium
+        pip install webdriver-manager
+        pip install webdrivermanager
+        pip install robotframework
+        pip install robotframework-seleniumlibrary
+        pip install robotframework-selenium2library
+        pip install rpaframework 
 
-- task: CopyFiles@2
-  inputs:
-    targetFolder: $(Build.ArtifactStagingDirectory)
+    displayName: 'install python pkg from requirements'
 
-- task: PublishBuildArtifacts@1
-  inputs:
-    PathtoPublish: '$(Build.ArtifactStagingDirectory)'
-    ArtifactName: 'dist'
-    publishLocation: 'Container'
+  - powershell: robot --pythonpath . TC1.robot
+    displayName: 'Run Robot Script'
